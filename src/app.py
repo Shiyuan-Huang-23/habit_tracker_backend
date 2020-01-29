@@ -63,6 +63,16 @@ def edit_habit(habit_id):
 
     return json.dumps({'success': True, 'data': habit.serialize()}), 201
 
+@app.route('/api/habits/<int:habit_id>/', methods=['DELETE'])
+def delete_habit(habit_id):
+    habit = Habit.query.filter_by(id=habit_id).first()
+    if not habit:
+        return json.dumps({'success': False, 'error': 'Habit not found'}), 404
+    db.session.delete(habit)
+    db.session.commit()
+
+    return json.dumps({'success': True, 'data': habit.serialize()}), 200
+
 # Your routes here
 '''
 @app.route('/api/courses/')
