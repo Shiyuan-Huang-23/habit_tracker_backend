@@ -75,31 +75,6 @@ def delete_habit(habit_id):
 
 # Your routes here
 '''
-@app.route('/api/courses/')
-def get_all_courses():
-    courses = Course.query.all()
-    res = {'success': True, 'data': [c.serialize() for c in courses]}
-    return json.dumps(res), 200
-
-@app.route('/api/courses/', methods=['POST'])
-def create_course():
-    post_body = json.loads(request.data)
-    code = post_body.get('code', '')
-    name = post_body.get('name', '')
-    course = Course(
-        code=code,
-        name=name
-    )
-    db.session.add(course)
-    db.session.commit()
-    return json.dumps({'success': True, 'data': course.serialize()}), 201
-
-@app.route('/api/course/<int:course_id>/')
-def get_course(course_id):
-    course = Course.query.filter_by(id=course_id).first()
-    if not course:
-        return json.dumps({'success': False, 'error': 'Course not found!'}), 404
-    return json.dumps({'success': True, 'data': course.serialize()}), 200
 
 @app.route('/api/users/', methods=['POST'])
 def create_user():
