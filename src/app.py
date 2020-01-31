@@ -23,13 +23,13 @@ def get_all_habits():
 def create_habit():
     post_body = json.loads(request.data)
     try:
-        assert 'user_id' in post_body
+        # assert 'user_id' in post_body
         assert 'name' in post_body
     except:
         res = {'success': False, 'error': 'User_id or name was not provided.'}
         return json.dumps(res), 400
     
-    user_id = post_body.get('user_id')
+    user_id = post_body.get('user_id', 1)
     name = post_body.get('name')
     notes = post_body.get('notes', '')
     habit = Habit(
