@@ -1,4 +1,6 @@
 import json
+import schedule
+import time
 from db import db, Habit, Event
 from flask import Flask, request
 
@@ -12,6 +14,12 @@ app.config['SQLALCHEMY_ECHO'] = True
 db.init_app(app)
 with app.app_context():
     db.create_all()
+
+
+def reset_habits():
+    habits = Habit.query.all()
+    for habit in habits:
+        habit.set_done(False)
 
 
 @app.route('/api/habits/')
