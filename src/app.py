@@ -13,11 +13,13 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+
 @app.route('/api/habits/')
 def get_all_habits():
     habits = Habit.query.all()
     res = {'success': True, 'data': [h.serialize() for h in habits]}
     return json.dumps(res), 200
+
 
 @app.route('/api/habits/', methods=['POST'])
 def create_habit():
@@ -28,32 +30,45 @@ def create_habit():
     except:
         res = {'success': False, 'error': 'User_id or name was not provided.'}
         return json.dumps(res), 400
-    
+
     user_id = post_body.get('user_id', 1)
     name = post_body.get('name')
     notes = post_body.get('notes', '')
     habit = Habit(
-        user_id = user_id,
-        name = name,
-        notes = notes
+        user_id=user_id,
+        name=name,
+        notes=notes
     )
     db.session.add(habit)
     db.session.commit()
     return json.dumps({'success': True, 'data': habit.serialize()}), 201
 
-@app.route('/api/habits/<int:habit_id>/')
+
+@app.route('/api/habit/<int:habit_id>/')
 def get_habit(habit_id):
     habit = Habit.query.filter_by(id=habit_id).first()
     if not habit:
         return json.dumps({'success': False, 'error': 'Habit not found'}), 404
     return json.dumps({'success': True, 'data': habit.serialize()}), 200
 
-@app.route('/api/habits/<int:habit_id>/', methods=['POST'])
+
+@app.route('/api/habit/<int:habit_id>/done/', methods=['POST'])
+def mark_done(habit_id):
+    habit = Habit.query.filter_by(id=habit_id).first()
+    if not habit:
+        return json.dumps({'success': False, 'error': 'Habit not found'}), 404
+    habit.set_done(True)
+    db.session.commit()
+
+    return json.dumps({'success': True, 'data': habit.serialize()}), 200
+
+
+@app.route('/api/habit/<int:habit_id>/', methods=['POST'])
 def edit_habit(habit_id):
     habit = Habit.query.filter_by(id=habit_id).first()
     if not habit:
         return json.dumps({'success': False, 'error': 'Habit not found'}), 404
-    
+
     post_body = json.loads(request.data)
     name = post_body.get('name', habit.name)
     notes = post_body.get('notes', habit.notes)
@@ -62,6 +77,7 @@ def edit_habit(habit_id):
     db.session.commit()
 
     return json.dumps({'success': True, 'data': habit.serialize()}), 201
+
 
 @app.route('/api/habits/<int:habit_id>/', methods=['DELETE'])
 def delete_habit(habit_id):
@@ -72,75 +88,6 @@ def delete_habit(habit_id):
     db.session.commit()
 
     return json.dumps({'success': True, 'data': habit.serialize()}), 200
-
-# Your routes here
-'''
-
-@app.route('/api/users/', methods=['POST'])
-def create_user():
-    post_body = json.loads(request.data)
-    name = post_body.get('name', '')
-    netid = post_body.get('netid', '')
-    user = User(
-        name=name,
-        netid=netid
-    )
-    db.session.add(user)
-    db.session.commit()
-    data = user.serialize()
-    data['course'] = []
-    return json.dumps({'success': True, 'data': data}), 201
-
-@app.route('/api/user/<user_id>/')
-def get_user(user_id):
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        return json.dumps({'success': False, 'error': 'User not found!'}), 404
-    data = user.serialize()
-    data['courses'] = [s.serialize() for s in user.student_course]
-    instructors = [i.serialize for i in user.instructor_course]
-    for i in instructors:
-        data['courses'].append(i)
-    return json.dumps({'success': True, 'data': data}), 200
-
-@app.route('/api/course/<int:course_id>/add/', methods=['POST'])
-def add_user_to_course(course_id):
-    course = Course.query.filter_by(id=course_id).first()
-    if not course:
-        return json.dumps({'success': False, 'error': 'Course not found!'}), 404
-    post_body = json.loads(request.data)
-    user_type = post_body.get('type')
-    user_id = post_body.get('user_id')
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        return json.dumps({'success': False, 'error': 'User not found!'}), 404
-    if user_type == 'instructor':
-        course.instructors.append(user)
-    elif user_type == 'student':
-        course.students.append(user)
-    # TODO Correct error code?
-    else:
-        return json.dumps({'success': False, 'error': 'Invalid user type'}), 401
-    db.session.commit()
-    return json.dumps({'success': True, 'data': course.serialize()}), 200
-
-@app.route('/api/course/<int:course_id>/assignment/', methods=['POST'])
-def create_assignment(course_id):
-    course = Course.query.filter_by(id=course_id).first()
-    if not course:
-        return json.dumps({'success': False, 'error': 'Course not found!'}), 404
-    post_body = json.loads(request.data)
-    title = post_body.get('title', '')
-    due_date = post_body.get('due_date')
-    assignment = Assignment(
-        title=title,
-        due_date=due_date
-    )
-    course.assignments.append(assignment)
-    db.session.add(assignment)
-    db.session.commit()
-    return json.dumps({'success': True, 'data': assignment.serialize()}), 201
-'''
 
 
 if __name__ == '__main__':
