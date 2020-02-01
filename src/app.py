@@ -1,11 +1,13 @@
 import json
 import schedule
 import time
+from datetime import datetime
 from db import db, Habit, Event
 from flask import Flask, request
 
 app = Flask(__name__)
 db_filename = 'habits.db'
+FORMAT = '%x'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///%s' % db_filename
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -96,6 +98,36 @@ def delete_habit(habit_id):
     db.session.commit()
 
     return json.dumps({'success': True, 'data': habit.serialize()}), 200
+
+
+@app.route('/api/event/<int:habit_id>/')
+def get_all_events(habit_id):
+    events = Event.query.filter_by(habit_id=habit_id)
+    return json.dumps({'success': True, 'data': [e.serialize() for e in events]})
+
+
+@app.route('/api/event/<int:habit_id>/', methods=['POST'])
+def create_event(habit_id):
+    habit = Habit.query.filter_by(id=habit_id).first()
+    if not habit:
+        return json.dumps({'success': False, 'error': 'Invalid habit id'}), 404
+    post_body = json.loads(request.data)
+    category = post_body.get('category')
+    skip_note = post_body.get('skip_note', '')
+    date = post_body.get('date', datetime.now().strftime(FORMAT))
+    try:
+        event = Event(
+            category=category,
+            date=date,
+            habit_id=habit_id,
+            skip_note=skip_note
+        )
+        db.session.add(event)
+        db.session.commit()
+    except:
+        return json.dumps({'success': False, 'error': 'Error in creating event'}), 500
+
+    return json.dumps({'success': True, 'data': event.serialize()}), 201
 
 
 if __name__ == '__main__':

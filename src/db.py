@@ -2,7 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 db = SQLAlchemy()
-FORMAT = '%c'
 
 
 class Habit(db.Model):
@@ -51,11 +50,11 @@ class Event(db.Model):
 
     def __init__(self, **kwargs):
         assert 'category' in kwargs
-        self.category = kwargs['category']
-        self.date = datetime.now().strftime(FORMAT)
+        self.category = kwargs.get('category')
+        self.date = kwargs.get('date')
         assert 'habit_id' in kwargs
-        self.habit_id = kwargs['habit_id']
-        self.skip_note = kwargs.get('skip_note', '')
+        self.habit_id = kwargs.get('habit_id')
+        self.skip_note = kwargs.get('skip_note')
 
     def serialize(self):
         return {
